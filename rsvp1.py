@@ -17,46 +17,49 @@ For first pass, collect:
     - yes, no, maybe
     - vote field, in this case for restaurant choice
 
+31jan16: started parameterization by creating invitesConfig to minimize edits
+that need to be made here. Almost everything (except >3 vote links in custom)
+can now be set in one place in invitesConfig.
+
 Gravy would be add to Calendar or a link to an invite
 More gravy - little Google Map image of the locale
 More gravy - blast tax window!
 
 '''
-
 #################################################################################
 #####   CGI Setup
 #####   from the qualcgi1.py file. Put this first so you capture errors
 #################################################################################
-#try:
+try:
+    import cgi, cgitb
+    # Debugging - has the webserver print a traceback instead of just a page
+    # not found error if there's an error in the code
+    cgitb.enable()
 
-import cgi, cgitb
-# Debugging - has the webserver print a traceback instead of just a page
-# not found error if there's an error in the code
-cgitb.enable()
-
-# cgi.escape() I think this is a security feature to keep people from
-# entering code into input fields
-# Create instance of FieldStorage
-form = cgi.FieldStorage()
-FName = form.getvalue('FName')
-LName = form.getvalue('LName')
-email = form.getvalue('email')
-rsvp = form.getvalue('rsvp')
-#vote = form.getvalue('vote')
+    # cgi.escape() I think this is a security feature to keep people from
+    # entering code into input fields
+    # Create instance of FieldStorage
+    form = cgi.FieldStorage()
+    FName = form.getvalue('FName')
+    LName = form.getvalue('LName')
+    email = form.getvalue('email')
+    rsvp = form.getvalue('rsvp')
+    #vote = form.getvalue('vote')
+except: pass
 '''
 
 LName = "Scahill"
 FName = "Mike"
 email = 'mdscahill@gmail.com'
-rsvp = "yes"
+rsvp = "maybe"
 #vote = None
 '''
 
 cgiList = [email, FName, LName, rsvp]
 cgiNameList = ['email', 'FName', 'LName', 'rsvp']
+cgiErr = 0
 if None in cgiList:
-    raise NameError
-#except: pass
+    cgiErr = 1
 
 #==================================================================================
 import csv
@@ -64,6 +67,10 @@ import os.path
 from urllib import urlencode
 from string import Template
 import datetime as DT
+
+# Configs
+
+from invitesConfig import *
 #import pytz
 
 ###################################################################
@@ -72,50 +79,18 @@ import datetime as DT
 try: version = os.path.basename(__file__)
 except: version = 'rsvp1'
 
-csvfile = 'rsvpLog1.csv'
-htmlTemplate = 'rsvpTemplate1.html'
-errTemplate = 'rsvpErrTemp1.html'
-blastTax = ''
-closedHTML = 'rsvpClosed.html'
-
-# How are you defining the votes - careful that the input URL needs to match
-# this
-yes = 'yes'
-maybe ='maybe'
-no = 'no'
 rsvpDict = {}
-
-# Event Details
-eName = 'GSB JPM Med-Biz After-After Party'
-eDateD = DT.date(2016, 1, 13)
-eDate2D = eDateD # Assumes same start & stop date, can change here
-#pst = pytz.timezone('US/Pacific')
-eStartT = DT.time(20,0,0,0) #Start time in 24-hr
-eStopT = DT.time(21,30,0,0) #using pytz, add: , pst) to get tmzone support
-location = "TBD - vote below if you're coming!"
-cutoffD = DT.date(2016, 1, 10)
 timeStampDT = DT.datetime.now()
-###################################################################
-### Make the date & times pretty
-###################################################################
-eStartDT = DT.datetime.combine(eDateD, eStartT)
-eStopDT = DT.datetime.combine(eDate2D, eStopT)
-
-eDateStart = eStartDT.strftime("%A, %d %b %Y %I:%M %p")
-eDateStop = eStopDT.strftime("%A, %d %b %Y %I:%M %p")
-eDate = eDateD.strftime("%A, %d %b %Y")
-eStart = eStartT.strftime("%I:%M %p")
-eStop = eStopT.strftime("%I:%M %p")
-cutoff = cutoffD.strftime("%A, %d %b %Y")
 timeStamp = timeStampDT.strftime("%Y%m%d_%H%M")
+
 ###################################################################
 ### Store the CGI form data in outfile
 ###################################################################
-if DT.date.today() <= cutoffD:
+if DT.datetime.now() <= cutoffD:
     cgiList.append(timeStamp)
     cgiNameList.append('timeStamp')
 
-    with open(csvfile) as csvopen:
+    with open(rsvpCSV) as csvopen:
         reader = csv.DictReader(csvopen, fieldnames=cgiNameList)
         for row in reader:
             if row['email'] != 'email':
@@ -135,7 +110,7 @@ if DT.date.today() <= cutoffD:
 # Finally, this makes the new entry from CGI data into the {email : {dict}}
 # format and adds / overwrites it into the rsvpDict
 
-    with open(csvfile, 'w') as csvopen:
+    with open(rsvpCSV, 'w') as csvopen:
         writer = csv.writer(csvopen)
         writer.writerow(cgiNameList)
 #Py2.6 on IXWeb doesn't support DictWriter.writeheaders(), hence the clumsy
@@ -147,53 +122,54 @@ if DT.date.today() <= cutoffD:
 else: pass
 
 ###################################################################
-### Use the string.Template to store custom HTML as a big string
+### Store HTML with string.Template
 ###################################################################
-customTemplate = """
-<b>Would you like to vote on where we go for dinner?</b><br>
-Click the name for the Yelp listing. Click "Vote" to cast your ballot.
-<ul>
-<li><a href="http://www.yelp.com/biz/marlowe-san-francisco-2" target="_blank">Marlowe</a> | <a href="$link1">[Vote!]</a></li>
-    <li><a href="http://www.yelp.com/biz/tropisue%C3%B1o-san-francisco-3" target="_blank">Tropisueno</a> | <a href="$link2">[Vote!]</a></li>
-    <li><a href="http://www.yelp.com/biz/t%C3%ADn-vietnamese-cuisine-san-francisco-3" target="_blank">Tin Vietnamese</a> | <a href="$link3">[Vote!]</a></li>
-</ul>
-"""
-
-urlBase = 'http://www.pediatricly.com/cgi-bin/vote1.py?'
-choices = ['Marlowe', 'Tropisueno', 'Tin_Vietnamese']
+# This section generates & templates personalized urls for voting in the custom
+# section. It draws on the overall customRsvpTemplate, urlBase & choices from
+# config.
+# It's fine to have no such links & just random custom text
+# *BUT* more than 3 urls would require going in here and adding link4 etc
 choiceUrls = []
-for vote in choices:
-    urlVars = {'email' : email, 'FName' : FName, 'vote' : vote}
-    suffix = urlencode(urlVars)
-    choiceUrls.append(urlBase+suffix)
+if len(choices) > 0:
+    for vote in choices:
+        urlVars = {'email' : email, 'FName' : FName, 'vote' : vote}
+        suffix = urlencode(urlVars)
+        choiceUrls.append(urlBase+suffix)
 
-link1 = choiceUrls[0]
-link2 = choiceUrls[1]
-link3 = choiceUrls[2]
+try:
+    link1 = choiceUrls[0]
+except: link1 = ''
+try:
+    link2 = choiceUrls[1]
+except: link2 = ''
+try:
+    link3 = choiceUrls[2]
+except: link3 = ''
 
-customHTML = Template(customTemplate).safe_substitute(link1=link1, link2=link2,
-                                                  link3=link3)
-custom = ''
-# if vote == yes or vote == maybe:
+customRsvpHTML = Template(customRsvpTemplate).safe_substitute(link1=link1,
+                                                              link2=link2,
+                                                              link3=link3)
+
+# The general RSVP personalized text
 bonus = ''
 if rsvp == yes:
-    bonus = "Can't wait to see you there!"
-    custom = customHTML
+    bonus = bonusYes
+    custom = customRsvpHTML
 elif rsvp == maybe:
-    bonus = "Hope that turns into a yes. Keep us posted."
-    custom = customHTML
+    bonus = bonusMaybe
+    custom = customRsvpHTML
 else:
-    bonus == "Will be sorry to miss you!"
-
-customClosed = ''
+    bonus = bonusNo
 
 templateVars = dict(eName=eName, eDate=eDate, eStart=eStart, eStop=eStop,
                     location=location, FName=FName, rsvp=rsvp, bonus=bonus,
                     custom=custom, customClosed=customClosed, version=version,
-                    cutoff=cutoff)
+                    cutoff=cutoff, imgUrl=imgUrl, blastTax=rsvpBlastTax)
 
-if DT.date.today() <= cutoffD:
-    templateFH = open(htmlTemplate, 'r')
+
+# Use closed template if today > cutoffD
+if DT.datetime.now() <= cutoffD:
+    templateFH = open(rsvphtmlTemplate, 'r')
     mainTemplate = templateFH.read()
     finalHTML = Template(mainTemplate).safe_substitute(templateVars)
 else:
@@ -210,19 +186,17 @@ else:
 ### For CGI, print the final templated HTML
 ###################################################################
 
-
-'''
-if NameError:
-    cgiErrTemplateFH = open(errTemplate, 'r')
+if cgiErr == 1:
+    cgiErrTemplateFH = open(rsvpErrTemplate, 'r')
     cgiErrTemplate = cgiErrTemplateFH.read()
     print "Content-type:text/html\r\n\r\n"
     print Template(cgiErrTemplate).safe_substitute(version=version,
-                                                   )
+                                                   blastTax=rsvpBlastTax,
+                                                   imgUrl=imgUrl)
 else:
-'''
-print "Content-type:text/html\r\n\r\n"
-# Need this header to start off the html file in CGI (not when saving html)
+    print "Content-type:text/html\r\n\r\n"
+    # Need this header to start off the html file in CGI (not when saving html)
 
-print finalHTML
+    print finalHTML
 
 

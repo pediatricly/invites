@@ -51,9 +51,9 @@ vote = 'Marlowe'
 
 cgiList = [email, FName, vote]
 cgiNameList = ['email', 'FName', 'vote']
+cgiErr = 0
 if None in cgiList:
-    raise NameError
-#except: pass
+    cgiErr = 1
 
 #==================================================================================
 import csv
@@ -61,6 +61,7 @@ import os.path
 from urllib import urlencode
 from string import Template
 import datetime as DT
+from invitesConfig import *
 #import pytz
 
 ###################################################################
@@ -69,35 +70,9 @@ import datetime as DT
 try: version = os.path.basename(__file__)
 except: version = 'vote1'
 
-csvfile = 'voteLog1.csv'
-htmlTemplate = 'voteTemplate1.html'
-errTemplate = 'voteErrTemp1.html'
-blastTax = ''
-
 voteDict = {}
 
-# Event Details
-eName = 'GSB JPM After-After Party'
-eDateD = DT.date(2016, 1, 13)
-eDate2D = eDateD # Assumes same start & stop date, can change here
-#pst = pytz.timezone('US/Pacific')
-eStartT = DT.time(20,0,0,0) #Start time in 24-hr
-eStopT = DT.time(21,30,0,0)
-location = "TBD - based on your vote"
-cutoffD = DT.date(2016, 1, 10)
 timeStampDT = DT.datetime.now()
-###################################################################
-### Make the date & times pretty
-###################################################################
-eStartDT = DT.datetime.combine(eDateD, eStartT)
-eStopDT = DT.datetime.combine(eDate2D, eStopT)
-
-eDateStart = eStartDT.strftime("%A, %d %b %Y %I:%M %p")
-eDateStop = eStopDT.strftime("%A, %d %b %Y %I:%M %p")
-eDate = eDateD.strftime("%A, %d %b %Y")
-eStart = eStartT.strftime("%I:%M %p")
-eStop = eStopT.strftime("%I:%M %p")
-cutoff = cutoffD.strftime("%A, %d %b %Y")
 timeStamp = timeStampDT.strftime("%Y%m%d_%H%M")
 ###################################################################
 ### Store the CGI form data in outfile
@@ -105,7 +80,7 @@ timeStamp = timeStampDT.strftime("%Y%m%d_%H%M")
 cgiList.append(timeStamp)
 cgiNameList.append('timeStamp')
 
-with open(csvfile) as csvopen:
+with open(voteCSV) as csvopen:
     reader = csv.DictReader(csvopen, fieldnames=cgiNameList)
     for row in reader:
         if row['email'] != 'email':
@@ -125,7 +100,7 @@ voteDict[email] = newVote
 # Finally, this makes the new entry from CGI data into the {email : {dict}}
 # format and adds / overwrites it into the voteDict
 
-with open(csvfile, 'w') as csvopen:
+with open(voteCSV, 'w') as csvopen:
     writer = csv.writer(csvopen)
     writer.writerow(cgiNameList)
 #Py2.6 on IXWeb doesn't support DictWriter.writeheaders(), hence the clumsy
@@ -138,32 +113,14 @@ with open(csvfile, 'w') as csvopen:
 ###################################################################
 ### Use the string.Template to store custom HTML as a big string
 ###################################################################
-'''
-customTemplate = """
-"""
-#customHTML = Template(customTemplate).safe_substitute(link1=link1, link2=link2,
-'''
 
-custom = 'Mike will let you know once the votes are tallied and the location confirmed.'
-# if vote == yes or vote == maybe:
-bonus = ''
-'''
-if rsvp == yes:
-    bonus = "Can't wait to see you there!"
-    custom = customHTML
-elif rsvp == maybe:
-    bonus = "Hope that turns into a yes. Keep us posted."
-    custom = customHTML
-else:
-    bonus == "Will be sorry to miss you!"
-'''
-
-templateFH = open(htmlTemplate, 'r')
+templateFH = open(votehtmlTemplate, 'r')
 mainTemplate = templateFH.read()
 
 templateVars = dict(eName=eName, eDate=eDate, eStart=eStart, eStop=eStop,
-                    location=location, FName=FName, vote=vote, bonus=bonus,
-                    custom=custom, version=version, cutoff=cutoff)
+                    location=location, FName=FName, vote=vote, bonus=voteBonus,
+                    custom=voteCustom, version=version, cutoff=cutoff,
+                    imgUrl=imgUrl, blastTax=voteBlastTax)
 
 finalHTML = Template(mainTemplate).safe_substitute(templateVars)
 
@@ -174,20 +131,17 @@ finalHTML = Template(mainTemplate).safe_substitute(templateVars)
 ###################################################################
 ### For CGI, print the final templated HTML
 ###################################################################
-
-
-'''
-if NameError:
-    cgiErrTemplateFH = open(errTemplate, 'r')
+if cgiErr ==1:
+    cgiErrTemplateFH = open(voteErrTemplate, 'r')
     cgiErrTemplate = cgiErrTemplateFH.read()
     print "Content-type:text/html\r\n\r\n"
     print Template(cgiErrTemplate).safe_substitute(version=version,
-                                                   )
+                                                   blastTax=voteBlastTax,
+                                                   imgUrl=imgUrl)
 else:
-'''
-print "Content-type:text/html\r\n\r\n"
-# Need this header to start off the html file in CGI (not when saving html)
+    print "Content-type:text/html\r\n\r\n"
+    # Need this header to start off the html file in CGI (not when saving html)
 
-print finalHTML
+    print finalHTML
 
 
