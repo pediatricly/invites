@@ -62,9 +62,10 @@ import re
 import os.path
 from string import Template
 import urllib
+from invitesConfig import *
 
 try: version = os.path.basename(__file__)
-except: version = 'inviteGen1.py'
+except: version = 'inviteGen.py'
 
 #########################################################
 ### Define Globals
@@ -79,27 +80,6 @@ mail.login('precipalert', 'sheil@650')
 #set.
 '''
 
-# Column Names as variables. Can adjust the strings to match the csv
-FName = 'FName'
-LName = 'LName'
-nickName = 'nickName'
-sex = 'sex'
-email = 'email'
-custom1 = 'custom1'
-custom2 = 'custom2'
-msgHTML = 'msgHTML' # This becomes the last header when writing templated html
-# to csv
-event='GSB JPM Med-Biz After-After Party'
-dateStr='Wed 13 Jan 2016'
-startTime='8:00 pm'
-endTime='9:30 pm'
-location='TBD - see voting'
-subject = 'JPM Med-Biz Symposium After-After Party'
-headers = [FName, LName, nickName, sex, email, custom1, custom2, msgHTML]
-
-# Input contact list, commented raw_input below if you want
-csvIn = 'contactList.csv' # Saves me typing while debugging
-
 # Initialize these here as a reminder what $varnames the template string expects
 # for the rsvp urls
 rsvpYesI = ''
@@ -110,14 +90,6 @@ nickNameI = ''
 # Watch for **templateDict** below. Can't be set here.
 # This dict determines which vars go into the invite html template.
 # Every $var from template needs to be added there.
-
-# Then these are the variables that get urlencoded into those rsvp URLs
-rsvpVars = [FName, LName, email] # NB this is just getting text labels set above
-rsvpBase = 'http://www.pediatricly.com/cgi-bin/rsvp1.py?'
-
-inviteTemplate = 'template.html'
-invitesOut = 'invitesOut.csv'
-
 
 ##########################################################
 ### Read in the contact list from csv to list of dicts
@@ -130,13 +102,13 @@ This would be:
     [{FName: Mike, LName: Scahill...}, {FName: Michele, LName: D...}...],
 '''
 while True:
-    # csvIn = raw_input("Enter contact csv name in working dir: ")
+    # contactsCSV = raw_input("Enter contact csv name in working dir: ")
     try:
-        fh = open(csvIn, 'rb')
+        fh = open(contactsCSV, 'rb')
         break
     except:
         print "Sorry! I'm having trouble opening that file. Wanna try again?"
-        continue
+        break
 
 contactList = list(csv.DictReader(fh))
 #This is a list of dicts with keys col headings & values the indiv data.
@@ -194,22 +166,27 @@ for person in contactList:
     # rsvp1.py  receives these data
     #Eventually, a way to add +1 or message into RSVP easily
     rsvpYesI += rsvpBase + urllib.urlencode(rsvpDict)
-    rsvpYesI += '&rsvp=yes'
+    rsvpYesI += '&' + rsvp + '=' + yes
     rsvpMaybeI += rsvpBase + urllib.urlencode(rsvpDict)
-    rsvpMaybeI += '&rsvp=maybe'
+    rsvpMaybeI += '&' + rsvp + '=' + maybe
     rsvpNoI += rsvpBase + urllib.urlencode(rsvpDict)
-    rsvpNoI += '&rsvp=no'
+    rsvpNoI += '&' + rsvp + '=' + no
 
-    nickNameI += person[nickName]
-    templateDict = dict(nickNameI=nickNameI,
-                    event=event,
-                    dateStr=dateStr,
-                    startTime=startTime,
-                    endTime=endTime,
-                    location=location,
-                    rsvpYesI=rsvpYesI,
-                    rsvpMaybeI=rsvpMaybeI,
-                    rsvpNoI=rsvpNoI)
+    LNameI = person[LName]
+    FNameI = person[FName]
+    emailI = person[email]
+    custom1I = person[custom1]
+    custom2I = person[custom2]
+    nickNameI = person[nickName]
+    if person[new] == 'y':
+        newHTML = newBonus
+    else:
+        newHTML = ''
+    templateDict = dict(nickNameI=nickNameI, LNameI=LNameI, FNameI=FNameI,
+                    eName=eName, emailI=emailI, eStart=eStart, eStop=eStop,
+                    eDate = eDate, eDate2=eDate2, location=location,
+                    cutoff=cutoff, rsvpYesI=rsvpYesI, rsvpMaybeI=rsvpMaybeI,
+                    rsvpNoI=rsvpNoI, newHTML=newHTML)
 
     finalHTML = Template(htmlTemplate).safe_substitute(templateDict)
     finalText = Template(textTemplate).safe_substitute(templateDict)

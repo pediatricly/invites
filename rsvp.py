@@ -26,6 +26,14 @@ More gravy - little Google Map image of the locale
 More gravy - blast tax window!
 
 '''
+import csv
+import os.path
+from urllib import urlencode
+from string import Template
+import datetime as DT
+from invitesConfig import *
+#import pytz
+print "Content-type:text/html\r\n\r\n"
 #################################################################################
 #####   CGI Setup
 #####   from the qualcgi1.py file. Put this first so you capture errors
@@ -54,30 +62,16 @@ email = 'mdscahill@gmail.com'
 rsvp = "maybe"
 #vote = None
 '''
-
-cgiList = [email, FName, LName, rsvp]
-cgiNameList = ['email', 'FName', 'LName', 'rsvp']
+cgiListRSVP = [email, FName, LName, rsvp]
 cgiErr = 0
-if None in cgiList:
+if None in cgiListRSVP:
     cgiErr = 1
-
-#==================================================================================
-import csv
-import os.path
-from urllib import urlencode
-from string import Template
-import datetime as DT
-
-# Configs
-
-from invitesConfig import *
-#import pytz
 
 ###################################################################
 ### Define Globals
 ###################################
 try: version = os.path.basename(__file__)
-except: version = 'rsvp1'
+except: version = 'rsvp'
 
 rsvpDict = {}
 timeStampDT = DT.datetime.now()
@@ -87,11 +81,11 @@ timeStamp = timeStampDT.strftime("%Y%m%d_%H%M")
 ### Store the CGI form data in outfile
 ###################################################################
 if DT.datetime.now() <= cutoffD:
-    cgiList.append(timeStamp)
-    cgiNameList.append('timeStamp')
+    cgiListRSVP.append(timeStamp)
+    cgiNameListRSVP.append('timeStamp')
 
     with open(rsvpCSV) as csvopen:
-        reader = csv.DictReader(csvopen, fieldnames=cgiNameList)
+        reader = csv.DictReader(csvopen, fieldnames=cgiNameListRSVP)
         for row in reader:
             if row['email'] != 'email':
                 rsvpDict[row['email']] = row
@@ -102,7 +96,7 @@ if DT.datetime.now() <= cutoffD:
 # 'email': 'mdsc@gmail.com', 'FName': ' Mike', 'rsvp': ' yes'}, 'email@u.com' :
 # {'LName':...
 
-    newRsvp = dict(zip(cgiNameList, cgiList))
+    newRsvp = dict(zip(cgiNameListRSVP, cgiListRSVP))
 # zip is a nifty function that turns 2 lists into a dict, aka turns 2 vectors
 # len = m into an m x 2 matrix. (Also works to make a list of lists)
 
@@ -112,12 +106,12 @@ if DT.datetime.now() <= cutoffD:
 
     with open(rsvpCSV, 'w') as csvopen:
         writer = csv.writer(csvopen)
-        writer.writerow(cgiNameList)
+        writer.writerow(cgiNameListRSVP)
 #Py2.6 on IXWeb doesn't support DictWriter.writeheaders(), hence the clumsy
 #2 writer objects
-        dictWriter = csv.DictWriter(csvopen, fieldnames=cgiNameList)
+        dictWriter = csv.DictWriter(csvopen, fieldnames=cgiNameListRSVP)
         for item in rsvpDict:
-            row = rsvpDict.get(item, cgiNameList)
+            row = rsvpDict.get(item, cgiNameListRSVP)
             dictWriter.writerow(row)
 else: pass
 
@@ -132,7 +126,7 @@ else: pass
 choiceUrls = []
 if len(choices) > 0:
     for vote in choices:
-        urlVars = {'email' : email, 'FName' : FName, 'vote' : vote}
+        urlVars = {'email' : email, 'FName' : FName, 'LName' : LName, 'vote' : vote}
         suffix = urlencode(urlVars)
         choiceUrls.append(urlBase+suffix)
 
@@ -146,20 +140,27 @@ try:
     link3 = choiceUrls[2]
 except: link3 = ''
 
-customRsvpHTML = Template(customRsvpTemplate).safe_substitute(link1=link1,
-                                                              link2=link2,
-                                                              link3=link3)
 
 # The general RSVP personalized text
 bonus = ''
 if rsvp == yes:
+    customYesHTML = Template(customYesTemplate).safe_substitute(link1=link1,
+                                                              link2=link2,
+                                                              link3=link3)
     bonus = bonusYes
-    custom = customRsvpHTML
+    custom += customYesHTML
 elif rsvp == maybe:
+    customMaybeHTML = Template(customMaybeTemplate).safe_substitute(link1=link1,
+                                                              link2=link2,
+                                                              link3=link3)
     bonus = bonusMaybe
-    custom = customRsvpHTML
+    custom += customMaybeHTML
 else:
+    customNoHTML = Template(customNoTemplate).safe_substitute(link1=link1,
+                                                              link2=link2,
+                                                              link3=link3)
     bonus = bonusNo
+    custom += customNoHTML
 
 templateVars = dict(eName=eName, eDate=eDate, eStart=eStart, eStop=eStop,
                     location=location, FName=FName, rsvp=rsvp, bonus=bonus,
@@ -189,12 +190,10 @@ else:
 if cgiErr == 1:
     cgiErrTemplateFH = open(rsvpErrTemplate, 'r')
     cgiErrTemplate = cgiErrTemplateFH.read()
-    print "Content-type:text/html\r\n\r\n"
     print Template(cgiErrTemplate).safe_substitute(version=version,
                                                    blastTax=rsvpBlastTax,
                                                    imgUrl=imgUrl)
 else:
-    print "Content-type:text/html\r\n\r\n"
     # Need this header to start off the html file in CGI (not when saving html)
 
     print finalHTML

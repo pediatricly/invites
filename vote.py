@@ -23,36 +23,40 @@ More gravy - blast tax window!
 
 '''
 
+print "Content-type:text/html\r\n\r\n"
 #################################################################################
 #####   CGI Setup
 #####   from the qualcgi1.py file. Put this first so you capture errors
 #################################################################################
-#try:
+try:
+    import cgi, cgitb
+    # Debugging - has the webserver print a traceback instead of just a page
+    # not found error if there's an error in the code
+    cgitb.enable()
 
-
-import cgi, cgitb
-# Debugging - has the webserver print a traceback instead of just a page
-# not found error if there's an error in the code
-cgitb.enable()
-
-# cgi.escape() I think this is a security feature to keep people from
-# entering code into input fields
-# Create instance of FieldStorage
-form = cgi.FieldStorage()
-FName = form.getvalue('FName')
-email = form.getvalue('email')
-vote = form.getvalue('vote')
+    # cgi.escape() I think this is a security feature to keep people from
+    # entering code into input fields
+    # Create instance of FieldStorage
+    form = cgi.FieldStorage()
+    try: FName = form.getvalue('FName')
+    except: FName = None
+    try: LName = form.getvalue('LName')
+    except: LName = None
+    try: email = form.getvalue('email')
+    except: email = Non
+    try: vote = form.getvalue('vote')
+    except: vote = None
+except: pass
 '''
 
 email = "dblockvk@gmail.com"
 FName = 'Mike'
 vote = 'Marlowe'
 '''
-
-cgiList = [email, FName, vote]
-cgiNameList = ['email', 'FName', 'vote']
+cgiNameListVote = ['email', 'FName', 'LName', 'vote']
+cgiListVote = [email, FName, LName, vote]
 cgiErr = 0
-if None in cgiList:
+if None in cgiListVote:
     cgiErr = 1
 
 #==================================================================================
@@ -68,7 +72,7 @@ from invitesConfig import *
 ### Define Globals
 ###################################
 try: version = os.path.basename(__file__)
-except: version = 'vote1'
+except: version = 'vote'
 
 voteDict = {}
 
@@ -77,11 +81,11 @@ timeStamp = timeStampDT.strftime("%Y%m%d_%H%M")
 ###################################################################
 ### Store the CGI form data in outfile
 ###################################################################
-cgiList.append(timeStamp)
-cgiNameList.append('timeStamp')
+cgiListVote.append(timeStamp)
+cgiNameListVote.append('timeStamp')
 
 with open(voteCSV) as csvopen:
-    reader = csv.DictReader(csvopen, fieldnames=cgiNameList)
+    reader = csv.DictReader(csvopen, fieldnames=cgiNameListVote)
     for row in reader:
         if row['email'] != 'email':
             voteDict[row['email']] = row
@@ -92,7 +96,7 @@ with open(voteCSV) as csvopen:
 # 'email': 'mdsc@gmail.com', 'FName': ' Mike', 'vote': ' yes'}, 'email@u.com' :
 # {'LName':...
 
-newVote = dict(zip(cgiNameList, cgiList))
+newVote = dict(zip(cgiNameListVote, cgiListVote))
 # zip is a nifty function that turns 2 lists into a dict, aka turns 2 vectors
 # len = m into an m x 2 matrix. (Also works to make a list of lists)
 
@@ -102,12 +106,12 @@ voteDict[email] = newVote
 
 with open(voteCSV, 'w') as csvopen:
     writer = csv.writer(csvopen)
-    writer.writerow(cgiNameList)
+    writer.writerow(cgiNameListVote)
 #Py2.6 on IXWeb doesn't support DictWriter.writeheaders(), hence the clumsy
 #2 writer objects
-    dictWriter = csv.DictWriter(csvopen, fieldnames=cgiNameList)
+    dictWriter = csv.DictWriter(csvopen, fieldnames=cgiNameListVote)
     for item in voteDict:
-        row = voteDict.get(item, cgiNameList)
+        row = voteDict.get(item, cgiNameListVote)
         dictWriter.writerow(row)
 
 ###################################################################
@@ -134,12 +138,10 @@ finalHTML = Template(mainTemplate).safe_substitute(templateVars)
 if cgiErr ==1:
     cgiErrTemplateFH = open(voteErrTemplate, 'r')
     cgiErrTemplate = cgiErrTemplateFH.read()
-    print "Content-type:text/html\r\n\r\n"
     print Template(cgiErrTemplate).safe_substitute(version=version,
                                                    blastTax=voteBlastTax,
                                                    imgUrl=imgUrl)
 else:
-    print "Content-type:text/html\r\n\r\n"
     # Need this header to start off the html file in CGI (not when saving html)
 
     print finalHTML
