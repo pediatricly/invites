@@ -170,14 +170,14 @@ for person in contactList:
     rsvpMaybeI += rsvpBase + urllib.urlencode(rsvpDict)
     rsvpMaybeI += '&' + rsvp + '=' + maybe
     rsvpNoI += rsvpBase + urllib.urlencode(rsvpDict)
-    rsvpNoI += '&' + rsvp + '=' + no
+    rsvpNoI += '&' + rsvpStr + '=' + no
 
-    LNameI = person[LName]
-    FNameI = person[FName]
-    emailI = person[email]
-    custom1I = person[custom1]
-    custom2I = person[custom2]
-    nickNameI = person[nickName]
+    LNameI = person[LNameStr]
+    FNameI = person[FNameStr]
+    emailI = person[emailStr]
+    custom1I = person[custom1Str]
+    custom2I = person[custom2Str]
+    nickNameI = person[nickNameStr]
     if person[new] == 'y':
         newHTML = newBonus
     else:

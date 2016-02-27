@@ -34,13 +34,14 @@ rsvp page:
 (eName=eName, eDate=eDate, eStart=eStart, eStop=eStop,
                     location=location, FName=FName, rsvp=rsvp, bonus=bonus,
                     custom=custom, customClosed=customClosed, version=version,
-                    cutoff=cutoff, imgUrl=imgUrl, blastTax=rsvpBlastTax)
+                    cutoff=cutoff, imgUrl=imgUrl, blastTax=rsvpBlastTax,
+                    calLink=calLink)
 
 vote page:
 (eName=eName, eDate=eDate, eStart=eStart, eStop=eStop,
                     location=location, FName=FName, vote=vote, bonus=voteBonus,
                     custom=voteCustom, version=version, cutoff=cutoff,
-                    imgUrl=imgUrl, blastTax=voteBlastTax)
+                    imgUrl=imgUrl, blastTax=voteBlastTax, calLink=calLink)
 Cutoff is big. rsvp.py essentially shuts off for new responses at that time.
 
 5. Run inviteGen.py. Emails in HTML are output into the msgHTML column.
@@ -60,6 +61,7 @@ a second vote comes from the same email.
 """
 import datetime as DT
 from string import Template
+from urllib import urlencode
 
 
 ###################################################################
@@ -76,12 +78,12 @@ eStartT = DT.time(20,0,0,0) #Start time in 24-hr
 eStopT = DT.time(21,30,0,0)
 location = "TBD - based on your vote"
 cutoffD = DT.datetime(2016, 5, 10,17,0)
+calDetails = 'The most rocking JPM after-after party in town'
 
 # Set words used in url & variable checks
 yes = 'yes'
 maybe ='maybe'
 no = 'no'
-rsvp = 'rsvp'
 ###################################################################
 ### Make the date & times pretty
 ###################################################################
@@ -96,23 +98,41 @@ eStart = eStartT.strftime("%I:%M %p")
 eStop = eStopT.strftime("%I:%M %p")
 cutoff = cutoffD.strftime("%A, %d %b %Y at %I:%M %p EST")
 
+today = DT.datetime.now()
+utc = DT.datetime.utcnow()
+utcOffset = utc - today
+eStartDTU = eStartDT + utcOffset + DT.timedelta(hours=3)
+eStopDTU = eStopDT + utcOffset + DT.timedelta(hours=3)
+str1 = eStartDTU.strftime('%Y%m%dT%H%M00Z')
+str2 = eStopDTU.strftime('%Y%m%dT%H%M00Z')
+calDates = str1 + '/' + str2
+calQuery = {'action' : 'TEMPLATE', 'text' : eName, 'dates' : calDates,
+            'details' : calDetails, 'location' : location}
+linkBase = 'http://www.google.com/calendar/event?'
+qs = urlencode(calQuery)
+calLink = linkBase + qs
+
 ###################################################################
 # For invitesGen
 ###################################################################
 # Column Names as variables. Can adjust the strings to match the csv
-FName = 'FName'
-LName = 'LName'
-nickName = 'nickName'
-sex = 'sex' # Not setup to be used in inviteGen1 yet
-email = 'email'
-new = 'new'
-custom1 = 'custom1'
-custom2 = 'custom2'
-msgHTML = 'msgHTML' # This becomes the last header when writing templated html
+FNameStr = 'FName'
+LNameStr = 'LName'
+nickNameStr = 'nickName'
+sexStr = 'sex' # Not setup to be used in inviteGen1 yet
+emailStr = 'email'
+newStr = 'new'
+custom1Str = 'custom1'
+custom2Str = 'custom2'
+msgHTMLStr = 'msgHTML' # This becomes the last header when writing templated html
+rsvpStr = 'rsvp'
+voteStr = 'vote'
 # to csv
 
 # headers is used by dictWriter (not reader) to setup the csv output file
-headers = [FName, LName, nickName, sex, email, new, custom1, custom2, msgHTML]
+# headers = [FName, LName, nickName, sex, email, new, custom1, custom2, msgHTML]
+headers = [FNameStr, LNameStr, nickNameStr, sexStr, emailStr, newStr,
+           custom1Str, custom2Str, msgHTMLStr]
 
 # subject = 'JPM Med-Biz Symposium After-After Party' # Invite email subject line
 # (not using this in current version where this is actually set using YAMM in
@@ -123,11 +143,11 @@ contactsCSV = 'contactList.csv'
 inviteTemplate = 'msgTemplate.html'
 invitesOut = 'invitesOut.csv'
 
-rsvpVars = [FName, LName, email] # This is just getting text labels set above
+rsvpVars = [FNameStr, LNameStr, emailStr] # This is just getting text labels set above
 # These are the variables that get urlencoded into the rsvp URLs using a loop to
 # create rsvpDict to pull individual values into the URL
 # &rsvp=yes maybe no are concatenated on using strings set above.
-rsvpBase = 'http://www.pediatricly.com/cgi-bin/rsvp.py?'
+rsvpBase = 'http://www.pediatricly.com/cgi-bin/invites/rsvp.py?'
 
 # Extra html added to the invite message only if contactList[person][new] == 'y'
 newBonus = "I think I mentioned when last we spoke that I've been organizing semi-formal networking dinner events for cool folks doing medical-business stuff. Would love to have you join for this next event.<br>"
@@ -158,7 +178,7 @@ customClosed = '' # Shows in html only when after cutoff in custom HTML template
 # Only the final product, customRsvpHTML ends up in rsvp1.py
 customYesTemplate = """
 <b>Would you like to vote on where we go for dinner?</b><br>
-Click the name for the Yelp listing. Click "Vote" to cast your ballot.
+&nbsp;&nbsp;&nbsp;&nbsp;Click the name for the Yelp listing. Click "Vote" to cast your ballot.
 <ul>
 <li><a href="http://www.yelp.com/biz/marlowe-san-francisco-2" target="_blank">Marlowe</a> | <a href="$link1">[Vote!]</a></li>
     <li><a href="http://www.yelp.com/biz/tropisue%C3%B1o-san-francisco-3" target="_blank">Tropisueno</a> | <a href="$link2">[Vote!]</a></li>
@@ -173,7 +193,7 @@ customNoTemplate = ''
 urlBase = 'http://www.pediatricly.com/cgi-bin/invites/vote.py?'
 choices = ['Marlowe', 'Tropisueno', 'Tin_Vietnamese']
 # choices = []
-cgiNameListRSVP = ['email', 'FName', 'LName', 'rsvp']
+cgiNameListRSVP = [emailStr, FNameStr, LNameStr, rsvpStr]
 rsvpSlot = 3 # The index of the above list where rsvp is
 ###################################################################
 # For the vote page:

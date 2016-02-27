@@ -23,6 +23,14 @@ More gravy - blast tax window!
 
 '''
 
+#==================================================================================
+import csv
+import os.path
+from urllib import urlencode
+from string import Template
+import datetime as DT
+from invitesConfig import *
+#import pytz
 print "Content-type:text/html\r\n\r\n"
 #################################################################################
 #####   CGI Setup
@@ -38,13 +46,13 @@ try:
     # entering code into input fields
     # Create instance of FieldStorage
     form = cgi.FieldStorage()
-    try: FName = form.getvalue('FName')
+    try: FName = form.getvalue(FNameStr)
     except: FName = None
-    try: LName = form.getvalue('LName')
+    try: LName = form.getvalue(LNameStr)
     except: LName = None
-    try: email = form.getvalue('email')
+    try: email = form.getvalue(emailStr)
     except: email = Non
-    try: vote = form.getvalue('vote')
+    try: vote = form.getvalue(voteStr)
     except: vote = None
 except: pass
 '''
@@ -53,20 +61,11 @@ email = "dblockvk@gmail.com"
 FName = 'Mike'
 vote = 'Marlowe'
 '''
-cgiNameListVote = ['email', 'FName', 'LName', 'vote']
+cgiNameListVote = [emailStr, FNameStr, LNameStr, voteStr]
 cgiListVote = [email, FName, LName, vote]
 cgiErr = 0
 if None in cgiListVote:
     cgiErr = 1
-
-#==================================================================================
-import csv
-import os.path
-from urllib import urlencode
-from string import Template
-import datetime as DT
-from invitesConfig import *
-#import pytz
 
 ###################################################################
 ### Define Globals
@@ -87,8 +86,8 @@ cgiNameListVote.append('timeStamp')
 with open(voteCSV) as csvopen:
     reader = csv.DictReader(csvopen, fieldnames=cgiNameListVote)
     for row in reader:
-        if row['email'] != 'email':
-            voteDict[row['email']] = row
+        if row[emailStr] != 'email':
+            voteDict[row[emailStr]] = row
 # Populates voteDict with the old vote csv as a dict of dicts. This is just to
 # make it easy to update new vote's using email as the main key. As such, that
 # last line sets email as the key of the big dict:
@@ -124,7 +123,7 @@ mainTemplate = templateFH.read()
 templateVars = dict(eName=eName, eDate=eDate, eStart=eStart, eStop=eStop,
                     location=location, FName=FName, vote=vote, bonus=voteBonus,
                     custom=voteCustom, version=version, cutoff=cutoff,
-                    imgUrl=imgUrl, blastTax=voteBlastTax)
+                    imgUrl=imgUrl, blastTax=voteBlastTax, calLink=calLink)
 
 finalHTML = Template(mainTemplate).safe_substitute(templateVars)
 

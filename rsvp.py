@@ -48,10 +48,10 @@ try:
     # entering code into input fields
     # Create instance of FieldStorage
     form = cgi.FieldStorage()
-    FName = form.getvalue('FName')
-    LName = form.getvalue('LName')
-    email = form.getvalue('email')
-    rsvp = form.getvalue('rsvp')
+    FName = form.getvalue(FNameStr)
+    LName = form.getvalue(LNameStr)
+    email = form.getvalue(emailStr)
+    rsvp = form.getvalue(rsvpStr)
     #vote = form.getvalue('vote')
 except: pass
 '''
@@ -126,7 +126,8 @@ else: pass
 choiceUrls = []
 if len(choices) > 0:
     for vote in choices:
-        urlVars = {'email' : email, 'FName' : FName, 'LName' : LName, 'vote' : vote}
+        urlVars = {emailStr : email, FNameStr : FName, LNameStr : LName,
+                   voteStr : vote}
         suffix = urlencode(urlVars)
         choiceUrls.append(urlBase+suffix)
 
@@ -165,8 +166,8 @@ else:
 templateVars = dict(eName=eName, eDate=eDate, eStart=eStart, eStop=eStop,
                     location=location, FName=FName, rsvp=rsvp, bonus=bonus,
                     custom=custom, customClosed=customClosed, version=version,
-                    cutoff=cutoff, imgUrl=imgUrl, blastTax=rsvpBlastTax)
-
+                    cutoff=cutoff, imgUrl=imgUrl, blastTax=rsvpBlastTax,
+                    calLink=calLink)
 
 # Use closed template if today > cutoffD
 if DT.datetime.now() <= cutoffD:
@@ -181,7 +182,6 @@ else:
 # Save for local debugging, not CGI
 # outfile2 =  open("rsvp1_templated.html", 'w')
 # outfile2.write(finalHTML)
-
 
 ###################################################################
 ### For CGI, print the final templated HTML
