@@ -80,12 +80,6 @@ mail.login('precipalert', 'sheil@650')
 #set.
 '''
 
-# Initialize these here as a reminder what $varnames the template string expects
-# for the rsvp urls
-rsvpYesI = ''
-rsvpMaybeI = ''
-rsvpNoI = ''
-nickNameI = ''
 
 # Watch for **templateDict** below. Can't be set here.
 # This dict determines which vars go into the invite html template.
@@ -117,7 +111,7 @@ fh.close()
 
 receivers = []
 for cList in contactList:
-    receivers.append(cList[email])
+    receivers.append(cList[emailStr])
 #receivers is the list of emails. Need this separate for the email function
 #Actually, I think I won't need it. Probably just want to loop through the
 #whole function for each contact row.
@@ -159,6 +153,12 @@ print templateDict
 ### Loop through the contactList to generate the emails
 #############################################################
 for person in contactList:
+    # Initialize these here as a reminder what $varnames the template string expects
+    # for the rsvp urls
+    rsvpYesI = ''
+    rsvpMaybeI = ''
+    rsvpNoI = ''
+    nickNameI = ''
     rsvpDict = {}
     for var in rsvpVars:
         rsvpDict[var] = person[var]
@@ -166,27 +166,33 @@ for person in contactList:
     # rsvp1.py  receives these data
     #Eventually, a way to add +1 or message into RSVP easily
     rsvpYesI += rsvpBase + urllib.urlencode(rsvpDict)
-    rsvpYesI += '&' + rsvp + '=' + yes
+    rsvpYesI += '&' + rsvpStr + '=' + yes
     rsvpMaybeI += rsvpBase + urllib.urlencode(rsvpDict)
-    rsvpMaybeI += '&' + rsvp + '=' + maybe
+    rsvpMaybeI += '&' + rsvpStr + '=' + maybe
     rsvpNoI += rsvpBase + urllib.urlencode(rsvpDict)
     rsvpNoI += '&' + rsvpStr + '=' + no
 
     LNameI = person[LNameStr]
     FNameI = person[FNameStr]
     emailI = person[emailStr]
+    newI = person[newStr]
+    if newI != '':
+        newBonusI = newBonus
+    else:
+        newBonusI = ''
     custom1I = person[custom1Str]
     custom2I = person[custom2Str]
     nickNameI = person[nickNameStr]
-    if person[new] == 'y':
-        newHTML = newBonus
+    if person[newStr] == 'y':
+        newI = newBonus
     else:
-        newHTML = ''
+        newI = ''
     templateDict = dict(nickNameI=nickNameI, LNameI=LNameI, FNameI=FNameI,
                     eName=eName, emailI=emailI, eStart=eStart, eStop=eStop,
                     eDate = eDate, eDate2=eDate2, location=location,
                     cutoff=cutoff, rsvpYesI=rsvpYesI, rsvpMaybeI=rsvpMaybeI,
-                    rsvpNoI=rsvpNoI, newHTML=newHTML)
+                    rsvpNoI=rsvpNoI, newI=newI, custom1I=custom1I,
+                        custom2I=custom2I)
 
     finalHTML = Template(htmlTemplate).safe_substitute(templateDict)
     finalText = Template(textTemplate).safe_substitute(templateDict)
@@ -208,7 +214,7 @@ for person in contactList:
 
 # When not using SMTP here, next line adds the personally formatted message to
 # the contacts list of dicts
-    person[msgHTML] = finalHTML[:-1]
+    person[msgHTMLStr] = finalHTML
 
 
 #############################################################
