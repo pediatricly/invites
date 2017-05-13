@@ -84,19 +84,19 @@ from urllib import urlencode
 ###################################################################
 # For all pages:
 ###################################################################
-imgUrl = "http://www.pediatricly.com/images/sympXII.jpg"
+imgUrl = "http://www.pediatricly.com/images/sympXIII.jpg"
 
 # Event Details
-eName = 'Med-Biz Symposium XII: The JPM After-After Party'
-eDateD = DT.date(2017, 1, 11)
+eName = 'Med-Biz Symposium XIII'
+eDateD = DT.date(2017, 6, 6)
 eDate2D = eDateD # Assumes same start & stop date, can change here
 #pst = pytz.timezone('US/Pacific')
-eStartT = DT.time(19,30,0,0) #Start time in 24-hr
-eStopT = DT.time(21,30,0,0)
-location = "TBD likely Fly Trap, 606 Folsom St, SF CA"
-cutoffD = DT.datetime(2016, 12, 28, 23, 59)
-calDetails = '''The Med-Biz Symposium v12 returns to JP Morgan with the
-hottest After-After Party in town. After-After the GSB mixer at ThirstyBear.'''
+eStartT = DT.time(19,00,0,0) #Start time in 24-hr
+eStopT = DT.time(21,00,0,0)
+location = "85 Bluxome St, San Francisco, CA 94107"
+cutoffD = DT.datetime(2017, 6, 5, 16, 00)
+calDetails = '''The Med-Biz Symposium v13 hosted by Collective Health.
+"What the heck is our government doing to health care, and does it matter?"'''
 
 # Set words used in url & variable checks
 yes = 'yes'
