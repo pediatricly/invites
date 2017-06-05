@@ -159,6 +159,7 @@ headers = [FNameStr, LNameStr, nickNameStr, sexStr, emailStr, newStr,
 # Input contact list, commented raw_input in file if you want
 contactsCSV = 'contactList.csv'
 inviteTemplate = 'msgTemplate.html'
+# inviteTemplate = 'reminderMsgTemplate.html'
 invitesOut = 'invitesOut.csv'
 
 rsvpVars = [FNameStr, LNameStr, emailStr] # This is just getting text labels set above
