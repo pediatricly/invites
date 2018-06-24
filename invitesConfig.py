@@ -84,19 +84,19 @@ from urllib import urlencode
 ###################################################################
 # For all pages:
 ###################################################################
-imgUrl = "http://www.pediatricly.com/images/sympXIII.jpg"
+imgUrl = "http://www.pediatricly.com/images/sympXV.png"
 
 # Event Details
-eName = 'Med-Biz Symposium XIII'
-eDateD = DT.date(2017, 6, 6)
+eName = 'Med-Biz Symposium XV'
+eDateD = DT.date(2018, 1, 10)
 eDate2D = eDateD # Assumes same start & stop date, can change here
 #pst = pytz.timezone('US/Pacific')
-eStartT = DT.time(19,00,0,0) #Start time in 24-hr
-eStopT = DT.time(21,00,0,0)
-location = "85 Bluxome St, San Francisco, CA 94107"
-cutoffD = DT.datetime(2017, 6, 5, 16, 00)
-calDetails = '''The Med-Biz Symposium v13 hosted by Collective Health.
-"What the heck is our government doing to health care, and does it matter?"'''
+eStartT = DT.time(19,30,0,0) #Start time in 24-hr
+eStopT = DT.time(21,30,0,0)
+location = "The Fly Trap, 606 Folsom St, San Francisco, CA 94107"
+cutoffD = DT.datetime(2018, 1, 9, 17, 00)
+calDetails = '''The Med-Biz Symposium v15, the traditional JPM after-after party.
+After the GSB JPM after-party at Thirsty Bear, continue the conversation with the symposium crew just around the corner at Fly Trap.'''
 
 # Set words used in url & variable checks
 yes = 'yes'
@@ -158,8 +158,8 @@ headers = [FNameStr, LNameStr, nickNameStr, sexStr, emailStr, newStr,
 
 # Input contact list, commented raw_input in file if you want
 contactsCSV = 'contactList.csv'
-inviteTemplate = 'msgTemplate.html'
-# inviteTemplate = 'reminderMsgTemplate.html'
+# inviteTemplate = 'msgTemplate.html'
+inviteTemplate = 'reminderMsgTemplate_JPM.html'
 invitesOut = 'invitesOut.csv'
 
 rsvpVars = [FNameStr, LNameStr, emailStr] # This is just getting text labels set above
@@ -185,7 +185,7 @@ closedHTML = 'rsvpClosed.html'
 # These get added directly after the RSVP according to the response.
 bonusYes = "Can't wait to see you there!"
 bonusMaybe = "Hope that turns into a yes. Keep us posted."
-bonusNo = "Will be sorry to miss you. Hope to see you at Symposium XIII (~Apr 2017)."
+bonusNo = "Will be sorry to miss you. Hope to see you at Symposium XV, likely our usual JPM after-after party."
 
 custom = '' # Shows in html after the rsvp+bonus. custom Yes, Maybe, No get
 # concatenated to this. So custom is a unviersal response to add to the HTML and
