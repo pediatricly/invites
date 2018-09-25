@@ -84,19 +84,19 @@ from urllib import urlencode
 ###################################################################
 # For all pages:
 ###################################################################
-imgUrl = "http://www.pediatricly.com/images/sympXV.png"
+imgUrl = "http://www.pediatricly.com/images/ala.jpg"
 
 # Event Details
-eName = 'Med-Biz Symposium XV'
-eDateD = DT.date(2018, 1, 10)
+eName = 'Mike and Belle Housewarming'
+eDateD = DT.date(2018, 10, 13)
 eDate2D = eDateD # Assumes same start & stop date, can change here
 #pst = pytz.timezone('US/Pacific')
-eStartT = DT.time(19,30,0,0) #Start time in 24-hr
-eStopT = DT.time(21,30,0,0)
-location = "The Fly Trap, 606 Folsom St, San Francisco, CA 94107"
-cutoffD = DT.datetime(2018, 1, 9, 17, 00)
-calDetails = '''The Med-Biz Symposium v15, the traditional JPM after-after party.
-After the GSB JPM after-party at Thirsty Bear, continue the conversation with the symposium crew just around the corner at Fly Trap.'''
+eStartT = DT.time(14,00,0,0) #Start time in 24-hr
+eStopT = DT.time(22,00,0,0)
+location = "Alameda, CA"
+cutoffD = DT.datetime(2018, 10, 10, 17, 00)
+calDetails = '''"Housewarming with a little tour of the finest Alameda has to offer. Join for all our part!
+Early events will be pet/kid-friendly. Stay tuned for details.'''
 
 # Set words used in url & variable checks
 yes = 'yes'
@@ -177,7 +177,7 @@ newBonus = "<p>I think I mentioned this event when last we chatted. It's an info
 rsvpCSV = 'rsvpLog1.csv'
 rsvphtmlTemplate = 'rsvpTemplate1.html'
 rsvpErrTemplate = 'rsvpErrTemp1.html'
-rsvpBlastTax = ''
+rsvpBlastTax = 'https://www.youtube.com/watch?v=glii-kazad8'
 closedHTML = 'rsvpClosed.html'
 # How are you defining the votes - careful that the input URL needs to match
 # this
@@ -185,7 +185,7 @@ closedHTML = 'rsvpClosed.html'
 # These get added directly after the RSVP according to the response.
 bonusYes = "Can't wait to see you there!"
 bonusMaybe = "Hope that turns into a yes. Keep us posted."
-bonusNo = "Will be sorry to miss you. Hope to see you at Symposium XV, likely our usual JPM after-after party."
+bonusNo = "Will be sorry to miss you but hope to see you soon!"
 
 custom = '' # Shows in html after the rsvp+bonus. custom Yes, Maybe, No get
 # concatenated to this. So custom is a unviersal response to add to the HTML and
